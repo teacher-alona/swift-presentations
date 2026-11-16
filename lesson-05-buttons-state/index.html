@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Кнопки та @State · Swift · Урок 5</title>
+<style>
+:root{--navy:#1d1d1f;--off:#f5f5f7;--blue:#0071e3;--blue2:#6cb4ff;--gray:#515154;--line:#d2d2d7;--green:#34c759;--red:#ff3b30;--yellow:#ffd60a;--orange:#ff9500;
+--sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+--serif:ui-serif,"New York",Georgia,Cambria,serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000;overflow:hidden;font-family:var(--sans);-webkit-tap-highlight-color:transparent;user-select:none}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center center;overflow:hidden;background:var(--navy)}
+.slide{position:absolute;inset:0;padding:48px 64px;opacity:0;visibility:hidden;transition:opacity .45s ease,visibility .45s;color:var(--navy);background:var(--off)}
+.slide.dark{background:var(--navy);color:#fff}
+.slide.active{opacity:1;visibility:visible}
+.slide>*{--d:0}
+.slide.active .rise{animation:rise .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*90ms + 120ms)}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.kicker{font-size:15px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
+.dark .kicker{color:var(--blue2)}
+h1,h2{font-family:var(--serif);font-weight:700;letter-spacing:-.01em}
+h1{font-size:76px;line-height:1.05}
+h2{font-size:46px;line-height:1.1;margin-bottom:22px}
+p,li{font-size:25px;line-height:1.4}
+.sub{font-size:26px;color:#c7c7cc}
+.gray{color:var(--gray)}.dark .gray{color:#a1a1a6}
+.row{display:flex;gap:36px;align-items:flex-start}
+.col{flex:1;min-width:0}
+.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px 28px}
+.dark .card{background:#2c2c2e;border-color:#3a3a3c}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:#e8e8ed;font-size:21px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:.2s;color:var(--navy)}
+.chip.on,.chip:hover{background:#d6e8fb;border-color:var(--blue);color:var(--blue)}
+.btn{font:600 22px var(--sans);border:none;border-radius:14px;padding:14px 26px;cursor:pointer;background:var(--blue);color:#fff;transition:transform .12s,filter .2s}
+.btn:active{transform:scale(.94)}.btn:hover{filter:brightness(1.1)}
+.btn.gray2{background:#e5e5ea;color:var(--navy)}.btn.ghost{background:transparent;color:var(--blue)}.btn.red{background:var(--red)}.btn.green{background:var(--green)}
+.btn.sm{font-size:19px;padding:10px 20px}
+/* code */
+pre.code{font:500 22px/1.55 var(--mono);background:#1d1d1f;color:#e8e8ed;border-radius:20px;padding:22px 26px;overflow:hidden;white-space:pre;tab-size:4}
+.ln{padding:0 10px;margin:0 -10px;border-radius:8px;transition:background .3s;display:block;min-height:1.55em}
+.ln.hot{background:rgba(0,113,227,.45)}
+.ln.err{background:rgba(255,59,48,.35)}
+.ln.part{background:rgba(255,214,10,.28)}
+.k{color:#ff7ab2}.s{color:#ff8170}.n{color:#d9c97c}.c{color:#7f8c98}.at{color:#fd8f3f}.m{color:#6bdfff}.t{color:#dabaff}
+/* phone */
+.phone{width:320px;height:600px;border-radius:50px;border:11px solid #0b0b0c;background:#fff;position:relative;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.35);flex:none;color:var(--navy)}
+.phone:before{content:"";position:absolute;top:8px;left:50%;width:96px;height:26px;margin-left:-48px;border-radius:20px;background:#0b0b0c;z-index:5}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:50px 20px 24px;text-align:center}
+.big{font:700 96px var(--sans);letter-spacing:-.02em;transition:transform .2s}
+.big.pop{animation:pop .35s}
+@keyframes pop{40%{transform:scale(1.25)}}
+.sbtn{font:600 21px var(--sans);border:none;border-radius:12px;padding:12px 22px;background:var(--blue);color:#fff;cursor:pointer;transition:transform .1s}
+.sbtn:active{transform:scale(.92)}.sbtn.l{background:#e5e5ea;color:var(--blue)}.sbtn.plain{background:none;color:var(--blue)}
+.state{font:600 20px var(--mono);background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 18px;color:var(--navy)}
+.dark .state{background:#2c2c2e;border-color:#3a3a3c;color:#fff}
+.state b{color:var(--blue)}
+.err-banner{position:absolute;left:10px;right:10px;bottom:10px;background:var(--red);color:#fff;border-radius:14px;padding:12px 14px;font:600 15px/1.35 var(--mono);transform:translateY(130%);transition:transform .35s cubic-bezier(.2,.9,.3,1.2);z-index:6;text-align:left}
+.err-banner.show{transform:none}
+.console{font:500 18px/1.5 var(--mono);background:#0b0b0c;color:#7ee787;border-radius:14px;padding:12px 16px;height:130px;overflow:hidden}
+.dice{width:78px;height:78px;border-radius:16px;background:#fff;border:3px solid var(--navy);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:9px;gap:2px;transition:transform .3s}
+.dice i{border-radius:50%;background:transparent;transition:.15s}.dice i.on{background:var(--navy)}
+.dice.roll{animation:roll .5s}
+@keyframes roll{0%{transform:rotate(0) scale(1)}50%{transform:rotate(200deg) scale(1.2)}100%{transform:rotate(360deg) scale(1)}}
+.heart{width:140px;height:140px;cursor:pointer;transition:transform .2s}
+.heart path{fill:none;stroke:var(--red);stroke-width:2.2;transition:fill .2s}
+.heart.on path{fill:var(--red)}
+.heart.on{animation:beat .45s}
+@keyframes beat{30%{transform:scale(1.35)}60%{transform:scale(.9)}}
+/* nav */
+#bar{position:absolute;left:0;bottom:0;height:5px;background:var(--blue);width:0;transition:width .4s;z-index:50}
+#hud{position:absolute;right:22px;bottom:14px;font:600 15px var(--sans);color:#8e8e93;z-index:50}
+#nav{position:absolute;inset:0;z-index:40;pointer-events:none}
+#nav button{position:absolute;top:50%;width:70px;height:120px;margin-top:-60px;background:transparent;border:none;pointer-events:auto;color:#8e8e93;font-size:40px;opacity:0;transition:.2s;cursor:pointer}
+#nav button:hover{opacity:1}#prev{left:0}#next{right:0}
+#notes{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);color:#fff;padding:20px 64px 26px;font-size:22px;line-height:1.45;z-index:60;transform:translateY(105%);transition:transform .3s}
+#notes.show{transform:none}
+#notes small{display:block;color:var(--blue2);font-weight:700;letter-spacing:.12em;margin-bottom:6px;font-size:14px}
+#grid{position:absolute;inset:0;background:rgba(0,0,0,.94);z-index:70;display:none;padding:30px;overflow:auto}
+#grid.show{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-content:start}
+#grid div{background:#2c2c2e;color:#fff;border-radius:14px;padding:16px;font:600 18px var(--sans);cursor:pointer;border:2px solid transparent;min-height:84px}
+#grid div:hover,#grid div.cur{border-color:var(--blue)}
+#grid div span{color:var(--blue2);display:block;font-size:13px;margin-bottom:4px}
+#help{position:absolute;top:14px;right:18px;font:600 14px var(--sans);color:#8e8e93;z-index:50;opacity:.8}
+.timeline .step{display:flex;gap:20px;align-items:center;margin-bottom:14px;padding:16px 22px;border-radius:18px;background:#fff;border:1px solid var(--line)}
+.step .tm{font:700 22px var(--sans);color:var(--blue);width:110px}
+.step .tt{font-size:26px;font-weight:600}
+.flow{display:flex;gap:18px;align-items:stretch}
+.flow .node{flex:1;padding:22px;border-radius:20px;background:#2c2c2e;border:3px solid transparent;transition:.35s;text-align:center;font-size:23px;opacity:.45}
+.flow .node.on{opacity:1;border-color:var(--blue);background:#0a2a4d;transform:translateY(-8px)}
+.flow .node b{display:block;font-size:44px;margin-bottom:6px}
+.flow .arr{align-self:center;font-size:40px;color:#636366}
+.flip{perspective:900px;height:250px;cursor:pointer}
+.flip>div{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}
+.flip.on>div{transform:rotateY(180deg)}
+.flip .f,.flip .b{position:absolute;inset:0;backface-visibility:hidden;border-radius:22px;padding:22px 24px;overflow:hidden}
+.flip .f{background:#1d1d1f;color:#e8e8ed}
+.flip .b{background:#fff;border:2px solid var(--blue);transform:rotateY(180deg);font-size:21px;line-height:1.4}
+.flip .f code,.flip .b code{font-family:var(--mono)}
+.flip .tag{font:700 13px var(--sans);letter-spacing:.12em;color:var(--blue2);margin-bottom:8px}
+.flip .b .tag{color:var(--blue)}
+.qopt{display:block;width:100%;text-align:left;font:600 23px var(--sans);padding:16px 22px;margin:10px 0;border-radius:16px;border:2px solid var(--line);background:#fff;cursor:pointer;transition:.2s;color:var(--navy)}
+.qopt:hover{border-color:var(--blue)}.qopt.ok{background:#d4f5dd;border-color:var(--green)}.qopt.bad{background:#ffdcd9;border-color:var(--red)}
+.qopt code{font-family:var(--mono)}
+.lvl{border-radius:22px;padding:16px 26px;background:#fff;border:1px solid var(--line);cursor:pointer;transition:.2s}
+.lvl:hover{border-color:var(--blue)}
+.lvl h3{font-size:26px;margin-bottom:6px}
+.lvl .hint{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:20px;color:var(--gray)}
+.lvl.open .hint{display:block;animation:rise .4s both}
+.badge{display:inline-block;font:700 14px var(--sans);padding:4px 12px;border-radius:999px;background:var(--blue);color:#fff;margin-right:10px;vertical-align:middle}
+.float{animation:float 4s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-14px)}}
+.glow{animation:glow 1.6s infinite}
+@keyframes glow{50%{box-shadow:0 0 0 14px rgba(0,113,227,.0),0 0 0 0 rgba(0,113,227,.0)}0%{box-shadow:0 0 0 0 rgba(0,113,227,.55)}100%{box-shadow:0 0 0 22px rgba(0,113,227,0)}}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.ripple{position:absolute;border-radius:50%;background:rgba(0,113,227,.5);transform:scale(0);animation:rip .7s ease-out forwards;pointer-events:none}
+@keyframes rip{to{transform:scale(1);opacity:0}}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- 1 TITLE -->
+<section class="slide dark" data-title="Кнопки, які щось роблять" data-notes="Привітайтеся. Попросіть класу натиснути велику кнопку: вона рахує дотики. Скажіть: «Ця кнопка щось пам'ятає. Сьогодні навчимося робити так само». Тест із минулого заняття можна роздати до початку слайдів.">
+  <div style="position:absolute;left:64px;top:60px;--i:0" class="rise"><span class="kicker">Swift · 10 клас · Урок 5</span></div>
+  <div style="position:absolute;left:64px;top:170px;width:700px">
+    <h1 class="rise" style="--i:1">Кнопки, які<br>щось роблять</h1>
+    <p class="sub rise" style="--i:3;margin-top:26px">Змінні, замикання та <span style="color:var(--blue2);font-family:var(--mono)">@State</span></p>
+    <p class="gray rise" style="--i:4;margin-top:14px;font-size:20px">Керування: ← → · F повний екран · O огляд слайдів</p>
+  </div>
+  <div style="position:absolute;right:90px;top:150px;width:380px;text-align:center;--i:3" class="rise">
+    <div class="float"><button class="btn glow" id="tapme" style="font-size:34px;padding:34px 50px;border-radius:30px;position:relative;overflow:hidden">Тапни мене</button></div>
+    <div class="state" style="margin-top:46px;font-size:26px">тапів: <b id="tapcount">0</b></div>
+    <p id="tapmsg" class="gray" style="font-size:20px;margin-top:16px;min-height:56px">Ця кнопка щось пам'ятає. Як вона це робить?</p>
+  </div>
+</section>
+
+<!-- 2 PLAN -->
+<section class="slide" data-title="План уроку" data-notes="Покажіть план. Підкресліть: найбільше часу на самостійну практику, 17 хвилин.">
+  <div class="kicker rise">Сьогодні</div><h2 class="rise" style="--i:1">План пари: 45 хвилин</h2>
+  <div class="timeline">
+    <div class="step rise" style="--i:2"><span class="tm">5 хв</span><span class="tt">Тест і розбір помилок</span></div>
+    <div class="step rise" style="--i:3"><span class="tm">10 хв</span><span class="tt">Змінні: let, var і типи</span></div>
+    <div class="step rise" style="--i:4"><span class="tm">10 хв</span><span class="tt">Кнопка та @State: оживляємо екран</span></div>
+    <div class="step rise" style="--i:5"><span class="tm">17 хв</span><span class="tt">Практика: лічильник, лайк, власна сторінка</span></div>
+    <div class="step rise" style="--i:6"><span class="tm">3 хв</span><span class="tt">Квіз і підсумок</span></div>
+  </div>
+</section>
+
+<!-- 3 DEAD BUTTONS -->
+<section class="slide" data-title="Мертві кнопки" data-notes="Нехай діти потапають кнопки. Нічого не відбувається. Запитайте: чому? Бо в дужках порожньо: { }. Кнопка має вигляд, але не має дії.">
+  <div class="kicker rise">Повторення</div><h2 class="rise" style="--i:1">Минулого разу кнопки були «мертві»</h2>
+  <p class="rise gray" style="--i:2;margin-bottom:26px">Спробуйте натиснути. Що станеться?</p>
+  <div class="row">
+    <div class="col rise" style="--i:3"><pre class="code" id="c-dead"></pre></div>
+    <div class="col rise" style="--i:4;display:flex;flex-direction:column;gap:20px;align-items:flex-start">
+      <button class="btn dead">Оцінити</button>
+      <button class="btn gray2 dead">Пізніше</button>
+      <button class="btn ghost dead">Скасувати</button>
+      <p id="deadmsg" style="font-size:24px;min-height:70px;color:var(--gray)">Вигляд є. Дії немає: у дужках <b style="font-family:var(--mono)">{ }</b> порожньо.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 ANATOMY -->
+<section class="slide" data-title="З чого складається кнопка" data-notes="Натискайте плашки: підсвічується частина коду. Замикання — це шматок коду, який «чекає» на дотик. Потім натисніть живу кнопку: консоль покаже, що дія спрацювала.">
+  <div class="kicker rise">Нове</div><h2 class="rise" style="--i:1">З чого складається кнопка</h2>
+  <div class="row">
+    <div class="col rise" style="--i:2">
+      <pre class="code" id="c-anat"></pre>
+      <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
+        <span class="chip" data-p="a">① Напис</span><span class="chip" data-p="b">② Дія у { }</span><span class="chip" data-p="c">③ Вигляд</span>
+      </div>
+      <p id="anatmsg" style="font-size:23px;margin-top:18px;min-height:68px">Оберіть частину коду.</p>
+    </div>
+    <div class="col rise" style="--i:3">
+      <div class="card" style="text-align:center"><button class="btn" id="anatbtn" style="font-size:28px;padding:20px 40px">Привіт</button></div>
+      <div class="console" id="anatcon" style="margin-top:20px"></div>
+      <p class="gray" style="font-size:20px;margin-top:10px">Код у фігурних дужках називається <b>замиканням</b> (closure).</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 let var -->
+<section class="slide" data-title="Змінні: let і var" data-notes="let — константа: значення не можна змінити, Xcode покаже помилку. var — змінна. Натисніть обидві кнопки. Потім типи: натискайте плашки String, Int, Bool, Double.">
+  <div class="kicker rise">Змінні</div><h2 class="rise" style="--i:1">let не змінюється, var змінюється</h2>
+  <div class="row">
+    <div class="col rise" style="--i:2">
+      <pre class="code" id="c-var"></pre>
+      <div style="margin-top:18px;display:flex;gap:14px;flex-wrap:wrap">
+        <button class="btn red sm" id="b-let">name = «Марко»</button>
+        <button class="btn green sm" id="b-var">score += 10</button>
+      </div>
+      <div class="state" style="margin-top:18px">name = <b id="v-name">"Олена"</b> &nbsp; score = <b id="v-score">0</b></div>
+      <p id="varerr" style="color:var(--red);font:600 19px var(--mono);margin-top:12px;min-height:50px"></p>
+    </div>
+    <div class="col rise" style="--i:3">
+      <p style="font-weight:700;margin-bottom:12px">Типи значень. Натисніть:</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+        <span class="chip" data-t="String">String</span><span class="chip" data-t="Int">Int</span><span class="chip" data-t="Bool">Bool</span><span class="chip" data-t="Double">Double</span>
+      </div>
+      <div class="card"><pre id="typebox" style="font:600 24px/1.5 var(--mono);white-space:pre-wrap;min-height:120px">Оберіть тип.</pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 interpolation -->
+<section class="slide" data-title="Значення в тексті" data-notes="\( ) — підстановка значення в рядок. Діти міняють ім'я та бали й бачать результат одразу. Це міст до Text з \\(count).">
+  <div class="kicker rise">Змінні в тексті</div><h2 class="rise" style="--i:1">Як показати значення в Text</h2>
+  <div class="row">
+    <div class="col rise" style="--i:2">
+      <pre class="code" id="c-interp"></pre>
+      <div style="margin-top:22px;font-size:23px">Ім'я: <input id="in-name" value="Олена" style="font:600 23px var(--sans);padding:10px 14px;border-radius:12px;border:2px solid var(--line);width:200px;user-select:text"></div>
+      <div style="margin-top:16px;font-size:23px">Бали: <input id="in-score" type="range" min="0" max="100" value="42" style="width:240px;vertical-align:middle"> <b id="in-sv">42</b></div>
+    </div>
+    <div class="col rise" style="--i:3;display:flex;justify-content:center">
+      <div class="phone" style="height:430px;width:320px"><div class="screen"><div id="interp-out" style="font:700 34px/1.3 var(--sans)">Привіт, Олена!</div><div id="interp-out2" style="font:600 28px var(--sans);color:var(--blue)">Бали: 42</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 NO STATE -->
+<section class="slide dark" data-title="Чому лічильник не працює" data-notes="Центральний момент уроку. Спершу натисніть +1 без @State: червона помилка. Потім натисніть «Додати @State»: код оживає. Пояснення: структура екрана незмінна, тому звичайну змінну всередині неї змінити не можна. @State каже SwiftUI: «стеж за цим значенням».">
+  <div class="kicker rise">Головна ідея</div><h2 class="rise" style="--i:1">Чому цей лічильник не працює?</h2>
+  <div class="row">
+    <div class="col rise" style="--i:2">
+      <pre class="code" id="c-nostate" style="font-size:20px"></pre>
+      <div style="margin-top:18px;display:flex;gap:14px"><button class="btn" id="b-addstate">+ Додати @State</button><button class="btn gray2" id="b-resetstate">Скинути</button></div>
+      <p id="nostatemsg" style="font-size:23px;margin-top:16px;color:#c7c7cc;min-height:72px">Натисніть <b>+1</b> у телефоні справа.</p>
+    </div>
+    <div class="col rise" style="--i:3;display:flex;justify-content:center">
+      <div class="phone" style="height:500px"><div class="screen"><div class="big" id="ns-num">0</div><button class="sbtn" id="ns-btn">+1</button></div><div class="err-banner" id="ns-err">Cannot assign to property: 'self' is immutable</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 FLOW -->
+<section class="slide dark" data-title="Як працює @State" data-notes="Натискайте «Далі»: тап → значення змінюється → SwiftUI перемальовує body. Ключова фраза: змінився стан, перемалювався екран.">
+  <div class="kicker rise">Як це працює</div><h2 class="rise" style="--i:1">Що відбувається, коли натиснули</h2>
+  <div class="flow rise" style="--i:2;margin-top:30px" id="flow">
+    <div class="node" data-n="0"><b>👆</b>Тап по кнопці</div><div class="arr">→</div>
+    <div class="node" data-n="1"><b>🧠</b>Змінюється <span style="font-family:var(--mono)">count</span></div><div class="arr">→</div>
+    <div class="node" data-n="2"><b>🔄</b>SwiftUI викликає <span style="font-family:var(--mono)">body</span> знову</div><div class="arr">→</div>
+    <div class="node" data-n="3"><b>📱</b>Екран оновлено</div>
+  </div>
+  <div style="margin-top:48px;display:flex;gap:18px;align-items:center">
+    <button class="btn" id="flownext">Далі ▶</button><button class="btn gray2" id="flowauto">Автоплей</button>
+    <p id="flowtxt" style="font-size:25px;color:#c7c7cc;margin-left:16px">Один крок за раз.</p>
+  </div>
+  <div style="margin-top:34px"><pre class="code" style="font-size:22px;display:inline-block;padding-right:50px"><span class="at">@State</span> <span class="k">private var</span> count = <span class="n">0</span>   <span class="c">// SwiftUI стежить за цим значенням</span></pre></div>
+</section>
+
+<!-- 9 COUNTER -->
+<section class="slide" data-title="Лічильник наживо" data-notes="Це еталон для рівня 1 практики. Діти натискають кнопки й бачать, який рядок виконується. Зверніть увагу на inspector: це «пам'ять» екрана.">
+  <div class="kicker rise">Живий приклад</div><h2 class="rise" style="--i:1">Лічильник із @State</h2>
+  <div class="row">
+    <div class="col rise" style="--i:2"><pre class="code" id="c-counter" style="font-size:21px"></pre></div>
+    <div class="rise" style="--i:3;display:flex;flex-direction:column;gap:16px;align-items:center">
+      <div class="phone" style="height:470px"><div class="screen"><div class="big" id="cn-num">0</div><div style="display:flex;gap:12px"><button class="sbtn l" id="cn-m">−1</button><button class="sbtn" id="cn-p">+1</button></div><button class="sbtn plain" id="cn-r">Скинути</button></div></div>
+      <div class="state">count = <b id="cn-st">0</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 LIKE -->
+<section class="slide" data-title="Лайк: Bool і toggle" data-notes="Bool має два значення: true або false. toggle() перемикає. Умова ? а : б обирає символ. Тапніть на серце.">
+  <div class="kicker rise">Живий приклад</div><h2 class="rise" style="--i:1">Лайк: стан true або false</h2>
+  <div class="row">
+    <div class="col rise" style="--i:2"><pre class="code" id="c-like" style="font-size:20px"></pre>
+      <p style="font-size:22px;margin-top:16px"><span style="font-family:var(--mono);color:var(--blue)">liked ? "heart.fill" : "heart"</span> означає: якщо liked дорівнює true, беремо <b>heart.fill</b>, інакше <b>heart</b>.</p></div>
+    <div class="rise" style="--i:3;display:flex;flex-direction:column;gap:16px;align-items:center">
+      <div class="phone" style="height:470px"><div class="screen">
+        <svg class="heart" id="heart" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <div id="lk-txt" style="font:600 26px var(--sans)">Не подобається</div></div></div>
+      <div class="state">liked = <b id="lk-st">false</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 DICE -->
+<section class="slide" data-title="Кубики (приклад Apple)" data-notes="Це приклад із туторіалу Apple «Update the UI with state». Кожен кубик має свій @State. Кількість кубиків — окремий @State у батьківському екрані. Перемикайте вкладки коду.">
+  <div class="kicker rise">Приклад із туторіалу Apple</div><h2 class="rise" style="--i:1">Dice Roller: кубики зі станом</h2>
+  <div class="row">
+    <div class="col rise" style="--i:2">
+      <div style="display:flex;gap:10px;margin-bottom:12px"><span class="chip on" data-tab="0">Один кубик</span><span class="chip" data-tab="1">Багато кубиків</span></div>
+      <pre class="code" id="c-dice" style="font-size:17px"></pre>
+    </div>
+    <div class="rise" style="--i:3;display:flex;flex-direction:column;gap:14px;align-items:center">
+      <div class="phone" style="height:470px;width:360px"><div class="screen" style="gap:14px;justify-content:center">
+        <div id="dice-wrap" style="display:flex;flex-wrap:wrap;gap:18px;justify-content:center;max-width:280px"></div>
+        <button class="sbtn" id="d-roll">Кинути всі</button>
+        <div style="display:flex;gap:12px"><button class="sbtn l" id="d-minus">− кубик</button><button class="sbtn l" id="d-plus">+ кубик</button></div>
+      </div></div>
+      <div class="state" style="font-size:17px">numberOfDice = <b id="d-n">1</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 TASKS -->
+<section class="slide" data-title="Практика: три рівні" data-notes="Діти працюють індивідуально в Xcode. Натисніть на картку, щоб розгорнути підказку. Рівні 2 і 3 можна виконувати в довільному порядку. На слайді 15 (режим вчителя, клавіша T) є еталонний код.">
+  <div class="kicker rise">Практика · 17 хвилин</div><h2 class="rise" style="--i:1">Три рівні, працюєте самостійно</h2>
+  <div style="display:grid;gap:16px">
+    <div class="lvl rise" style="--i:2"><h3><span class="badge">Рівень 1</span>Лічильник</h3><p style="font-size:22px">Кнопки «+1», «−1» і «Скинути», число по центру. Число стає червоним, якщо менше нуля.<br><span class="gray" style="font-size:18px">Натисніть, щоб побачити підказку</span></p>
+      <div class="hint">Потрібні: <code>@State private var count = 0</code>, три <code>Button</code>, <code>Text("\(count)")</code>. Для кольору: <code>.foregroundStyle(count &lt; 0 ? .red : .primary)</code>.</div></div>
+    <div class="lvl rise" style="--i:3"><h3><span class="badge">Рівень 2</span>Лайк</h3><p style="font-size:22px">Серце перемикається між контуром і заливкою. Поруч підпис «Подобається» або «Не подобається».</p>
+      <div class="hint">Потрібні: <code>@State private var liked = false</code>, <code>liked.toggle()</code>, <code>Image(systemName: liked ? "heart.fill" : "heart")</code>.</div></div>
+    <div class="lvl rise" style="--i:4"><h3><span class="badge">Рівень 3</span>Ваша сторінка оживає</h3><p style="font-size:22px">Візьміть сторінку свого застосунку з минулого уроку. Додайте щонайменше одну кнопку, яка змінює текст, колір або символ.</p>
+      <div class="hint">Ідеї на наступному слайді. Мінімум: один <code>@State</code>, одна <code>Button</code> із дією, зміна на екрані.</div></div>
+  </div>
+</section>
+
+<!-- 13 IDEAS -->
+<section class="slide" data-title="Ідеї для рівня 3" data-notes="Кнопка генерує випадкову ідею. Якщо хтось застряг: пропонуйте ідею звідси.">
+  <div class="kicker rise">Рівень 3</div><h2 class="rise" style="--i:1">Не знаєте, що оживити? Отримайте ідею</h2>
+  <div class="card rise" style="--i:2;min-height:240px;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px"><div id="idea" style="font:700 36px/1.3 var(--serif)">Натисніть кнопку нижче</div></div>
+  <div class="rise" style="--i:3;margin-top:26px;display:flex;gap:16px;align-items:center"><button class="btn" id="idea-btn" style="font-size:26px;padding:18px 34px">🎲 Нова ідея</button><p class="gray" style="font-size:22px">Кожна ідея потребує одного @State і однієї кнопки.</p></div>
+  <div class="rise" style="--i:4;margin-top:22px"><pre class="code" style="font-size:20px;display:inline-block;padding-right:40px"><span class="at">@State</span> <span class="k">private var</span> <span class="t">isOn</span> = <span class="k">false</span> <span class="c">// ваш стан: Bool, Int або String</span></pre></div>
+</section>
+
+<!-- 14 ERRORS -->
+<section class="slide" data-title="Типові помилки" data-notes="Перевертайте картки клацанням. Попросіть дітей згадати: чи траплялась їм така помилка сьогодні.">
+  <div class="kicker rise">Якщо не виходить</div><h2 class="rise" style="--i:1">Типові помилки. Клацніть, щоб дізнатися причину</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+    <div class="flip rise" style="--i:2"><div><div class="f"><div class="tag">ПОМИЛКА 1</div><pre style="font:500 21px/1.5 var(--mono)"><span class="k">var</span> count = <span class="n">0</span>
+Button(<span class="s">"+1"</span>) { count += <span class="n">1</span> }</pre></div><div class="b"><div class="tag">ПРИЧИНА</div>Немає <code>@State</code>. Xcode: <code>Cannot assign to property: 'self' is immutable</code>. Додайте <code>@State private</code>.</div></div></div>
+    <div class="flip rise" style="--i:3"><div><div class="f"><div class="tag">ПОМИЛКА 2</div><pre style="font:500 21px/1.5 var(--mono)">Text(count)</pre></div><div class="b"><div class="tag">ПРИЧИНА</div>Text приймає рядок, а count це число. Xcode: <code>requires that 'Int' conform to 'StringProtocol'</code>. Напишіть <code>Text("\(count)")</code>.</div></div></div>
+    <div class="flip rise" style="--i:4"><div><div class="f"><div class="tag">ПОМИЛКА 3</div><pre style="font:500 21px/1.5 var(--mono)">Button(<span class="s">"Лайк"</span>) {
+    liked.toggle
+}</pre></div><div class="b"><div class="tag">ПРИЧИНА</div>Без дужок <code>toggle</code> не викликається, тож нічого не станеться. Пишіть <code>liked.toggle()</code>.</div></div></div>
+    <div class="flip rise" style="--i:5"><div><div class="f"><div class="tag">ПОМИЛКА 4</div><pre style="font:500 21px/1.5 var(--mono)">pips = <span class="t">Int</span>.random(in: <span class="n">1</span>..<span class="n">6</span>)</pre></div><div class="b"><div class="tag">ПРИЧИНА</div>Діапазон у Swift пишуть із трьома крапками: <code>1...6</code>. Так число 6 теж входить у діапазон.</div></div></div>
+  </div>
+</section>
+
+<!-- 15 QUIZ -->
+<section class="slide" data-title="Квіз" data-notes="Квіз можна пройти усім класом вголос або індивідуально на телефонах. Перше питання взято з перевірки в туторіалі Apple.">
+  <div class="kicker rise" id="q-k">Квіз · питання 1 з 5</div><h2 class="rise" style="--i:1;font-size:34px" id="q-t"></h2>
+  <div id="q-opts"></div>
+  <div style="display:flex;gap:16px;align-items:center;margin-top:10px"><button class="btn" id="q-next" style="display:none">Далі ▶</button><p id="q-exp" style="font-size:21px;color:var(--gray);flex:1"></p></div>
+</section>
+
+<!-- 16 RECAP -->
+<section class="slide dark" data-title="Підсумок і домашнє завдання" data-notes="Запитання на вихід усно або на листочках. Домашнє: закінчити рівні 1–3. Бонус для тих, у кого Mac: кубик із кнопкою «Кинути».">
+  <div class="kicker rise">Підсумок</div><h2 class="rise" style="--i:1">Що ми сьогодні дізналися</h2>
+  <div class="row">
+    <div class="col rise" style="--i:2">
+      <div class="card" style="margin-bottom:14px"><p><b>Button</b> має напис і дію у фігурних дужках.</p></div>
+      <div class="card" style="margin-bottom:14px"><p><b>let</b> не змінюється, <b>var</b> змінюється.</p></div>
+      <div class="card"><p><b>@State</b>: змінився стан, перемалювався екран.</p></div>
+    </div>
+    <div class="col rise" style="--i:3">
+      <div class="card" style="margin-bottom:14px"><p style="font-weight:700;margin-bottom:6px;color:var(--blue2)">Запитання на вихід</p><p style="font-size:22px">1. Що станеться, якщо забути @State?<br>2. Чим let відрізняється від var?<br>3. Що робить liked.toggle()?</p></div>
+      <div class="card"><p style="font-weight:700;margin-bottom:6px;color:var(--blue2)">Домашнє завдання</p><p style="font-size:22px">Закінчити рівні 1–3. Бонус: кубик із кнопкою «Кинути» (код зі слайда 11).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 TEACHER -->
+<section class="slide teacher" data-title="Для вчителя: відповіді" data-notes="Цей слайд видно лише в режимі вчителя (клавіша T або адреса з ?teacher).">
+  <div class="kicker rise">Для вчителя · лише в режимі T</div><h2 class="rise" style="--i:1;font-size:38px">Еталонний код</h2>
+  <div class="row">
+    <div class="col"><pre class="code" id="c-t1" style="font-size:15px"></pre></div>
+    <div class="col"><pre class="code" id="c-t2" style="font-size:15px"></pre></div>
+  </div>
+</section>
+
+<div id="bar"></div><div id="hud"></div><div id="help">←/→ · F · O · N нотатки</div>
+<div id="nav"><button id="prev">‹</button><button id="next">›</button></div>
+<div id="notes"><small>НОТАТКИ ВЧИТЕЛЯ</small><div id="notes-t"></div></div>
+<div id="grid"></div>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+/* ---------- highlighter ---------- */
+const KW=/\b(struct|var|let|some|private|func|if|else|return|in|import|true|false)\b/g;
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function hlLine(l){
+  const parts=[];let h=esc(l);
+  const store=(cls,t)=>{parts.push(`<span class="${cls}">${t}</span>`);return String.fromCharCode(0xE000+parts.length-1)};
+  h=h.replace(/(\/\/.*)$/,(m)=>store("c",m));
+  h=h.replace(/"(?:[^"\\]|\\.)*"/g,(m)=>store("s",m.replace(/\\\(([^)]*)\)/g,'\\(</span><span class="n">$1</span><span class="s">)')));
+  h=h.replace(/@\w+/g,(m)=>store("at",m));
+  h=h.replace(KW,(m)=>store("k",m));
+  h=h.replace(/\b(View|Text|Button|VStack|HStack|Image|Int|String|Bool|Double|Color|ForEach|DiceView|CounterView|ContentView|LikeView)\b/g,(m)=>store("t",m));
+  h=h.replace(/\.(\w+)/g,(m,a)=>/^\d/.test(a)?m:store("m",m));
+  h=h.replace(/\b\d+\b/g,(m)=>store("n",m));
+  return h.replace(/[\uE000-\uF8FF]/g,m=>parts[m.charCodeAt(0)-0xE000]);
+}
+function code(id,src){const el=typeof id==="string"?$("#"+id):id;el.innerHTML=src.replace(/^\n|\n$/g,"").split("\n").map((l,i)=>`<span class="ln" data-l="${i}">${hlLine(l)||" "}</span>`).join("");}
+const lines=(id)=>$$(".ln",$("#"+id));
+function hot(id,n,cls="hot",ms=900){const l=lines(id)[n];if(!l)return;l.classList.add(cls);setTimeout(()=>l.classList.remove(cls),ms)}
+/* ---------- code sources ---------- */
+code("c-dead",String.raw`
+Button("Оцінити") { }
+
+Button("Пізніше") { }
+    .buttonStyle(.bordered)
+
+Button("Скасувати") { }
+    .buttonStyle(.plain)`);
+code("c-anat",String.raw`
+Button("Привіт") {
+    print("Натиснуто")
+}
+.buttonStyle(.borderedProminent)`);
+code("c-var",String.raw`
+let name = "Олена"
+var score = 0
+
+score += 10     // працює
+name = "Марко"  // помилка`);
+code("c-interp",String.raw`
+let name = "Олена"
+var score = 42
+
+Text("Привіт, \(name)!")
+Text("Бали: \(score)")`);
+code("c-counter",String.raw`
+struct CounterView: View {
+    @State private var count = 0
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("\(count)")
+                .font(.system(size: 80, weight: .bold))
+            HStack {
+                Button("−1") { count -= 1 }
+                Button("+1") { count += 1 }
+            }
+            Button("Скинути") { count = 0 }
+        }
+    }
+}`);
+code("c-like",String.raw`
+struct LikeView: View {
+    @State private var liked = false
+
+    var body: some View {
+        VStack {
+            Image(systemName: liked ? "heart.fill" : "heart")
+                .font(.system(size: 100))
+                .foregroundStyle(.red)
+                .onTapGesture { liked.toggle() }
+            Text(liked ? "Подобається" : "Не подобається")
+        }
+    }
+}`);
+const DICE=[String.raw`
+struct DiceView: View {
+    @State private var numberOfPips = 1
+
+    var body: some View {
+        VStack {
+            Image(systemName: "die.face.\(numberOfPips).fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 100)
+            Button("Кинути") {
+                numberOfPips = Int.random(in: 1...6)
+            }
+        }
+    }
+}`,String.raw`
+struct ContentView: View {
+    @State private var numberOfDice = 1
+
+    var body: some View {
+        VStack {
+            HStack {
+                ForEach(1...numberOfDice, id: \.self) { _ in
+                    DiceView()
+                }
+            }
+            Button("+ кубик") { numberOfDice += 1 }
+            Button("− кубик") { numberOfDice -= 1 }
+        }
+    }
+}`];
+code("c-dice",DICE[0]);
+code("c-t1",String.raw`
+// Рівень 1
+@State private var count = 0
+
+VStack(spacing: 16) {
+    Text("\(count)")
+        .font(.system(size: 80, weight: .bold))
+        .foregroundStyle(count < 0 ? .red : .primary)
+    HStack {
+        Button("−1") { count -= 1 }
+        Button("+1") { count += 1 }
+    }
+    Button("Скинути") { count = 0 }
+}`);
+code("c-t2",String.raw`
+// Рівень 2
+@State private var liked = false
+
+VStack(spacing: 12) {
+    Image(systemName: liked ? "heart.fill" : "heart")
+        .font(.system(size: 80))
+        .foregroundStyle(.red)
+    Text(liked ? "Подобається" : "Не подобається")
+    Button("Лайк") { liked.toggle() }
+        .buttonStyle(.borderedProminent)
+}`);
+/* ---------- deck engine ---------- */
+const stage=$("#stage"),slides=$$(".slide");let cur=0,teacher=/teacher/.test(location.search)||localStorage.getItem("teacher")==="1";
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);stage.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener("resize",fit);fit();
+const vis=()=>slides.filter(s=>teacher||!s.classList.contains("teacher"));
+function go(n){const v=vis();n=Math.max(0,Math.min(v.length-1,n));slides.forEach(s=>s.classList.remove("active"));
+  v[n].classList.add("active");cur=n;$("#bar").style.width=((n+1)/v.length*100)+"%";$("#hud").textContent=(n+1)+" / "+v.length;
+  $("#notes-t").textContent=v[n].dataset.notes||"";history.replaceState(null,"","#"+(n+1));
+  clearInterval(ft);v[n].querySelectorAll(".rise").forEach(e=>{e.style.animation="none";e.offsetHeight;e.style.animation=""});
+  if(v[n].onenter)v[n].onenter();}
+const next=()=>go(cur+1),prev=()=>go(cur-1);
+$("#next").onclick=next;$("#prev").onclick=prev;
+addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT")return;
+  if(["ArrowRight","PageDown"," "].includes(e.key)){e.preventDefault();next()}
+  else if(["ArrowLeft","PageUp"].includes(e.key)){e.preventDefault();prev()}
+  else if(e.key==="Home")go(0);else if(e.key==="End")go(99);
+  else if(e.key==="f"||e.key==="F"){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
+  else if(e.key==="n"||e.key==="N")$("#notes").classList.toggle("show");
+  else if(e.key==="o"||e.key==="O"||e.key==="Escape")toggleGrid();
+  else if(e.key==="t"||e.key==="T"){teacher=!teacher;localStorage.setItem("teacher",teacher?"1":"0");const t=slides.find(s=>s.classList.contains("teacher"));go(Math.min(cur,vis().length-1));toast(teacher?"Режим вчителя: увімкнено":"Режим вчителя: вимкнено")}
+});
+let tx=null;stage.addEventListener("touchstart",e=>{tx=e.touches[0].clientX},{passive:true});
+stage.addEventListener("touchend",e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>70&&!e.target.closest("button,input,.chip,.flip,.lvl,.qopt,svg"))d<0?next():prev();tx=null});
+function toggleGrid(){const g=$("#grid");if(g.classList.contains("show")){g.classList.remove("show");return}
+  g.innerHTML=vis().map((s,i)=>`<div class="${i===cur?"cur":""}" data-i="${i}"><span>${i+1}</span>${s.dataset.title}</div>`).join("");g.classList.add("show");
+  $$("div",g).forEach(d=>d.onclick=()=>{g.classList.remove("show");go(+d.dataset.i)})}
+function toast(t){const d=document.createElement("div");d.textContent=t;d.style.cssText="position:absolute;top:24px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 20px;border-radius:12px;font:600 18px var(--sans);z-index:99";stage.appendChild(d);setTimeout(()=>d.remove(),1800)}
+function ripple(btn,e){const r=btn.getBoundingClientRect(),d=Math.max(r.width,r.height)*2,sc=r.width/btn.offsetWidth;const s=document.createElement("span");s.className="ripple";
+  s.style.cssText=`width:${d/sc}px;height:${d/sc}px;left:${(e.clientX-r.left)/sc-d/sc/2}px;top:${(e.clientY-r.top)/sc-d/sc/2}px`;btn.appendChild(s);setTimeout(()=>s.remove(),700)}
+/* ---------- slide 1 ---------- */
+let taps=0;const tm=["Ця кнопка щось пам'ятає. Як вона це робить?","Вона запам'ятала: вже "+"1"+" тап!","Число змінилось, і екран оновився. Це і є стан.","Сьогодні зробимо так само у власному коді."];
+$("#tapme").onclick=e=>{taps++;ripple(e.currentTarget,e);const c=$("#tapcount");c.textContent=taps;c.parentNode.classList.remove("pop");
+  $("#tapmsg").textContent=taps<3?(taps===1?"Вона запам'ятала: вже 1 тап!":"Вже "+taps+". Хто це рахує?"):taps<8?"Число змінилось, і екран оновився. Це і є стан.":"Сьогодні зробимо так само у власному коді."};
+/* ---------- slide 3 ---------- */
+$$(".dead").forEach((b,i)=>b.onclick=()=>{b.classList.remove("shake");b.offsetHeight;b.classList.add("shake");hot("c-dead",[0,2,5][i],"hot",900);
+  $("#deadmsg").innerHTML="Нічого не сталося. У дужках <b style='font-family:var(--mono)'>{ }</b> порожньо, тож кнопці нічого виконувати."});
+/* ---------- slide 4 ---------- */
+const parts={a:[0],b:[1],c:[3]},pm={a:"Напис: рядок у дужках після Button. Це те, що бачить користувач.",b:"Дія: код у фігурних дужках. Він виконується щоразу, коли людина тапає.",c:"Вигляд: модифікатори, які ви вже знаєте (buttonStyle, tint, controlSize)."};
+// lines: 0 Button(..) {, 1 print, 2 }, 3 .buttonStyle  (after trimming the first empty line)
+$$("[data-p]").forEach(ch=>ch.onclick=()=>{$$("[data-p]").forEach(x=>x.classList.remove("on"));ch.classList.add("on");
+  lines("c-anat").forEach(l=>l.classList.remove("part"));const p=ch.dataset.p;(p==="b"?[1]:p==="a"?[0]:[3]).forEach(i=>lines("c-anat")[i].classList.add("part"));$("#anatmsg").textContent=pm[p]});
+let acn=0;$("#anatbtn").onclick=()=>{const c=$("#anatcon");acn++;c.innerHTML+=`Натиснуто<br>`;c.scrollTop=c.scrollHeight;hot("c-anat",1,"hot",700);if(c.innerHTML.split("<br>").length>5)c.innerHTML=c.innerHTML.split("<br>").slice(-5).join("<br>")};
+/* ---------- slide 5 ---------- */
+let sc=0;$("#b-var").onclick=()=>{sc+=10;$("#v-score").textContent=sc;hot("c-var",3,"hot",900);$("#varerr").textContent=""};
+$("#b-let").onclick=()=>{hot("c-var",4,"err",1400);$("#varerr").textContent="Cannot assign to value: 'name' is a 'let' constant";const e=$("#v-name");e.classList.remove("shake");e.offsetHeight;e.classList.add("shake")};
+const TY={String:'let city = "Київ"\n// текст у лапках',Int:'var age = 16\n// ціле число',Bool:'var isOn = true\n// лише true або false',Double:'var price = 19.99\n// число з комою (крапкою)'};
+$$("[data-t]").forEach(c=>c.onclick=()=>{$$("[data-t]").forEach(x=>x.classList.remove("on"));c.classList.add("on");$("#typebox").textContent=TY[c.dataset.t]});
+/* ---------- slide 6 ---------- */
+function interp(){const n=$("#in-name").value||"…",s=$("#in-score").value;$("#interp-out").textContent="Привіт, "+n+"!";$("#interp-out2").textContent="Бали: "+s;$("#in-sv").textContent=s;
+  code("c-interp",`let name = "${n.replace(/"/g,"")}"\nvar score = ${s}\n\nText("Привіт, \\(name)!")\nText("Бали: \\(score)")`)}
+$("#in-name").oninput=interp;$("#in-score").oninput=interp;
+/* ---------- slide 7 ---------- */
+const NS_NO=String.raw`
+struct CounterView: View {
+    var count = 0
+
+    var body: some View {
+        VStack {
+            Text("\(count)")
+            Button("+1") { count += 1 }
+        }
+    }
+}`,NS_YES=NS_NO.replace("    var count = 0","    @State private var count = 0");
+let hasState=false,nsv=0;function renderNS(){code("c-nostate",hasState?NS_YES:NS_NO);if(hasState)hot("c-nostate",1,"hot",1400)}renderNS();
+$("#ns-btn").onclick=()=>{if(!hasState){$("#ns-err").classList.add("show");hot("c-nostate",6,"err",1800);$("#nostatemsg").textContent="Помилка: без @State змінну в екрані змінити не можна. Додайте @State.";setTimeout(()=>$("#ns-err").classList.remove("show"),2600)}
+  else{nsv++;const n=$("#ns-num");n.textContent=nsv;n.classList.remove("pop");n.offsetHeight;n.classList.add("pop");hot("c-nostate",6,"hot",700);$("#nostatemsg").textContent="Працює! Змінився стан, SwiftUI оновив екран."}};
+$("#b-addstate").onclick=()=>{hasState=true;renderNS();$("#ns-err").classList.remove("show");$("#nostatemsg").textContent="Додали @State. Тепер спробуйте +1."};
+$("#b-resetstate").onclick=()=>{hasState=false;nsv=0;$("#ns-num").textContent=0;renderNS();$("#ns-err").classList.remove("show");$("#nostatemsg").innerHTML="Натисніть <b>+1</b> у телефоні справа."};
+/* ---------- slide 8 ---------- */
+let fs=-1,ft;const FT=["1. Людина тапає по кнопці.","2. Виконується дія: count += 1, і значення стану змінюється.","3. SwiftUI бачить зміну @State і викликає body знову.","4. На екрані вже нове число. Усе це відбувається за мить."];
+function flowStep(){fs=(fs+1)%5;$$("#flow .node").forEach(n=>n.classList.toggle("on",+n.dataset.n===fs));$("#flowtxt").textContent=fs<4?FT[fs]:"Починаємо спочатку."; if(fs===4){$$("#flow .node").forEach(n=>n.classList.remove("on"))}}
+$("#flownext").onclick=flowStep;$("#flowauto").onclick=()=>{clearInterval(ft);ft=setInterval(flowStep,1500)};
+/* ---------- slide 9 ---------- */
+let cn=0;function cnr(){const n=$("#cn-num");n.textContent=cn;n.style.color=cn<0?"var(--red)":"";n.classList.remove("pop");n.offsetHeight;n.classList.add("pop");$("#cn-st").textContent=cn}
+$("#cn-m").onclick=()=>{cn--;cnr();hot("c-counter",8,"hot",900)};$("#cn-p").onclick=()=>{cn++;cnr();hot("c-counter",9,"hot",900)};$("#cn-r").onclick=()=>{cn=0;cnr();hot("c-counter",11,"hot",900)};
+/* ---------- slide 10 ---------- */
+let liked=false;function lk(){$("#heart").classList.toggle("on",liked);$("#lk-st").textContent=liked;$("#lk-txt").textContent=liked?"Подобається":"Не подобається";
+  const h=$("#heart");h.style.animation="none";h.offsetHeight;h.style.animation="";hot("c-like",8,"hot",900);hot("c-like",9,"hot",900)}
+$("#heart").onclick=()=>{liked=!liked;lk()};
+/* ---------- slide 11 ---------- */
+let nd=1,dv=[1];const POS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function dieHTML(p){return `<div class="dice">${[0,1,2,3,4,5,6,7,8].map(i=>`<i class="${POS[p].includes(i)?"on":""}"></i>`).join("")}</div>`}
+function renderDice(){const w=$("#dice-wrap");w.innerHTML=dv.map((p,i)=>`<div style="text-align:center">${dieHTML(p)}<button class="sbtn plain" data-i="${i}" style="font-size:16px;padding:6px">Кинути</button></div>`).join("");$("#d-n").textContent=nd;
+  $$("[data-i]",w).forEach(b=>b.onclick=()=>roll(+b.dataset.i))}
+function roll(i){const d=$$(".dice",$("#dice-wrap"))[i];d.classList.add("roll");let k=0;const t=setInterval(()=>{dv[i]=1+Math.floor(Math.random()*6);d.outerHTML=dieHTML(dv[i]);const nd2=$$(".dice",$("#dice-wrap"))[i];nd2.classList.add("roll");if(++k>4){clearInterval(t);hot("c-dice",tab===0?10:6,"hot",900)}},90)}
+$("#d-roll").onclick=()=>{dv.forEach((_,i)=>roll(i))};
+$("#d-plus").onclick=()=>{if(nd<6){nd++;dv.push(1+Math.floor(Math.random()*6));renderDice();hot("c-dice",tab===1?10:0,"hot",900)}};
+$("#d-minus").onclick=()=>{if(nd>1){nd--;dv.pop();renderDice();hot("c-dice",tab===1?11:0,"hot",900)}};
+let tab=0;$$("[data-tab]").forEach(c=>c.onclick=()=>{tab=+c.dataset.tab;$$("[data-tab]").forEach(x=>x.classList.toggle("on",x===c));code("c-dice",DICE[tab])});
+dv=[3];renderDice();
+$$(".flip").forEach(f=>f.onclick=()=>f.classList.toggle("on"));
+/* ---------- slide 12 ---------- */
+$$(".lvl").forEach(l=>l.onclick=()=>l.classList.toggle("open"));
+/* ---------- slide 13 ---------- */
+const IDEAS=["Кнопка «Додати в кошик» збільшує число біля значка кошика","Кнопка змінює тему: світлий і темний фон (Bool)","Кнопка «Улюблене» перемикає зірку на сторінці картки","Лічильник склянок води за день у трекері звичок","Кнопка «Далі» змінює назву пісні в плеєрі (String)","Кнопка «Показати/сховати» пароль (Bool)","Кнопка «Кинути» показує випадкову страву в меню (Int.random)","Кнопка змінює колір картки з синього на зелений","Кнопка «Виконано» закреслює назву завдання (Bool)","Кнопка + і − змінює кількість порцій у рецепті"];
+let ii=-1;$("#idea-btn").onclick=()=>{let n;do{n=Math.floor(Math.random()*IDEAS.length)}while(n===ii);ii=n;const e=$("#idea");e.style.animation="none";e.offsetHeight;e.style.animation="rise .5s both";e.textContent=IDEAS[n]};
+/* ---------- slide 15 quiz ---------- */
+const Q=[
+ {q:"Яке твердження про @State правильне?",o:["SwiftUI оновлює вигляд, коли змінюється значення будь-якої властивості @State","@State позначають словом public","Значення @State можна змінювати ззовні екрана"],a:0,e:"Саме це й робить @State: змінився стан, перемалювався екран."},
+ {q:"Що відбувається у фігурних дужках кнопки?",o:["Задається колір кнопки","Записується код, який виконується при натисканні","Пишеться напис кнопки"],a:1,e:"Код у фігурних дужках називається замиканням: це дія кнопки."},
+ {q:"Чим let відрізняється від var?",o:["let можна змінювати, var ні","Нічим, це синоніми","let не можна змінювати після створення, var можна"],a:2,e:"let це константа, var це змінна."},
+ {q:"Що покаже Text з \\(count), якщо count = 3?",o:["3","count","\\(count)"],a:0,e:"Запис \\( ) підставляє значення змінної в рядок."},
+ {q:"Яка картинка буде на екрані, якщо liked = false у Image(systemName: liked ? \"heart.fill\" : \"heart\")?",o:["heart.fill","heart","Помилка"],a:1,e:"Умова хибна, тому обирається те, що після двокрапки."}];
+let qi=0,qs=0,done=false;
+function renderQ(){const q=Q[qi];$("#q-k").textContent=`Квіз · питання ${qi+1} з ${Q.length}`;$("#q-t").textContent=q.q;$("#q-t").style.fontSize="34px";
+  $("#q-opts").innerHTML=q.o.map((o,i)=>`<button class="qopt" data-i="${i}">${esc(o)}</button>`).join("");$("#q-exp").textContent="";$("#q-next").style.display="none";done=false;
+  $$(".qopt").forEach(b=>b.onclick=()=>{if(done)return;done=true;const i=+b.dataset.i;if(i===q.a){qs++;b.classList.add("ok")}else{b.classList.add("bad");$$(".qopt")[q.a].classList.add("ok")}
+    $("#q-exp").textContent=q.e;const nx=$("#q-next");nx.style.display="";nx.textContent=qi<Q.length-1?"Далі ▶":"Результат"})}
+$("#q-next").onclick=()=>{if(qi<Q.length-1){qi++;renderQ()}else{$("#q-k").textContent="Квіз завершено";$("#q-t").textContent=`Ваш результат: ${qs} з ${Q.length}`;
+  $("#q-opts").innerHTML=`<div class="card" style="font-size:30px;text-align:center;padding:50px">${qs===Q.length?"🎉 Без жодної помилки!":qs>=3?"👍 Гарний результат":"Варто повторити слайди 5–9"}</div>`;$("#q-next").textContent="Спробувати ще";$("#q-next").style.display="";$("#q-exp").textContent="";$("#q-next").onclick=()=>{qi=0;qs=0;renderQ();$("#q-next").onclick=origNext}}};
+const origNext=$("#q-next").onclick;renderQ();
+/* ---------- start ---------- */
+const h=parseInt((location.hash||"#1").slice(1))||1;go(h-1);
+</script>
+</body>
+</html>
